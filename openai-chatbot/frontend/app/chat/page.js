@@ -6,10 +6,10 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [funMode, setFunMode] = useState(true); // Default fun mode is ON
+  const [funMode, setFunMode] = useState(true);
 
   const toggleFunMode = () => {
-    setFunMode((prevMode) => !prevMode); // Toggle funMode
+    setFunMode((prevMode) => !prevMode); 
   };
 
   const sendMessage = async () => {
@@ -24,7 +24,7 @@ export default function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input, funMode }), // Ensure funMode is part of the request body
+        body: JSON.stringify({ question: input, funMode }), 
       });
 
       if (!response.ok) {
@@ -57,7 +57,6 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50">
-      {/* Top Bar with Toggle */}
       <div className="flex items-center justify-between p-4 bg-white shadow-md">
         <h1 className="text-lg font-semibold">Chat Assistant</h1>
         <div className="flex items-center space-x-2">
@@ -75,7 +74,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div
@@ -105,7 +103,6 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Input */}
       <div className="border-t bg-white p-4">
         <div className="flex items-center space-x-2">
           <input
