@@ -16,7 +16,7 @@ export async function POST(request) {
     }
 
     // Send the question and funMode to the backend
-    const response = await fetch(`http://localhost:5500/api/ask`, {
+    const response = await fetch(`${backend}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, funMode }),
