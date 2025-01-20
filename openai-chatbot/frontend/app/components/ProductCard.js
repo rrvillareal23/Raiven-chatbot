@@ -16,7 +16,7 @@ export default function ProductCard({
           <a
             key={index}
             href={href}
-            target="_blank"
+            target="_self"
             className={`block text-center py-2 px-4 rounded-lg mb-4 ${style}`}
           >
             {text}
