@@ -46,7 +46,6 @@ const createVectorStore = async (fileIds) => {
   }
 };
 
-// Assistant creation
 const createAssistant = async (vectorStoreId) => {
   try {
     const assistant = await openai.beta.assistants.create({
@@ -65,7 +64,6 @@ const createAssistant = async (vectorStoreId) => {
   }
 };
 
-// Initialize system
 const initializeSystem = async () => {
   try {
     const files = [
@@ -82,7 +80,6 @@ const initializeSystem = async () => {
   }
 };
 
-// Toggle fun mode
 app.post("/api/toggle-fun-mode", (req, res) => {
   const { mode } = req.body;
   console.log("Toggle request received with mode:", mode);
@@ -94,13 +91,13 @@ app.post("/api/toggle-fun-mode", (req, res) => {
       .json({ error: "Mode must be a boolean (true or false)." });
   }
 
-  funMode = mode; // Set the funMode state
+  funMode = mode;
   console.log(`Fun mode is now: ${funMode}`);
   res.json({ message: `Fun mode is now ${funMode ? "ON" : "OFF"}.` });
 });
 
 app.post("/api/ask", async (req, res) => {
-  const { question, funMode } = req.body; // Get both question and funMode
+  const { question, funMode } = req.body; 
 
   if (!question)
     return res.status(400).json({ error: "Question is required." });
@@ -108,17 +105,15 @@ app.post("/api/ask", async (req, res) => {
     return res.status(500).json({ error: "Assistant not initialized." });
 
   try {
-    // Dynamically set the system message based on funMode
     const systemMessage = funMode
       ? "You are a knowledgeable assistant with access to two documents: the Emporia Guide and the EV Charger Technical Specifications. Your job is to provide clear and precise answers based solely on these documents. Use friendly language and include emojis for engagement. ⚡😊"
       : "You are a knowledgeable assistant with access to two documents: the Emporia Guide and the EV Charger Technical Specifications. Your job is to provide clear and precise answers based solely on these documents. Avoid using emojis or unnecessary language.";
 
-    // Ensure that the 'system' message is a string and not a boolean
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: systemMessage }, // Pass the systemMessage as content
-        { role: "user", content: question }, // Pass the user question
+        { role: "system", content: systemMessage },
+        { role: "user", content: question },
       ],
     });
 
@@ -130,10 +125,8 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
-// Initialize system on server start
 initializeSystem();
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
