@@ -6,7 +6,6 @@ export async function POST(request) {
   try {
     const { question, funMode } = await request.json();
 
-    // Validate question presence
     if (!question) {
       console.error("Question is missing in request body.");
       return new Response(JSON.stringify({ error: "Question is required." }), {
@@ -15,14 +14,12 @@ export async function POST(request) {
       });
     }
 
-    // Send the question and funMode to the backend
     const response = await fetch(`${backend}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, funMode }),
     });
 
-    // Handle error response from backend
     if (!response.ok) {
       const errorText = await response.text();
       console.error(
