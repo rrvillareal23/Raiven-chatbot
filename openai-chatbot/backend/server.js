@@ -16,9 +16,8 @@ app.use(express.json());
 
 let vectorStoreId = null;
 let assistantId = null;
-let funMode = true; // Default "fun mode" is ON
+let funMode = true;
 
-// File upload function
 const uploadFile = async (filePath) => {
   try {
     const fileStream = fs.createReadStream(filePath);
@@ -34,7 +33,6 @@ const uploadFile = async (filePath) => {
   }
 };
 
-// Vector store creation
 const createVectorStore = async (fileIds) => {
   try {
     const vectorStore = await openai.beta.vectorStores.create({
