@@ -1,6 +1,10 @@
+import dotenv from "dotenv";
+dotenv.config();
+const backend = process.env.BACKEND;
+
 export async function POST(request) {
   try {
-    const response = await fetch(`http://localhost:5501/api/initialize`, {
+    const response = await fetch(`${backend}/api/initialize`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
