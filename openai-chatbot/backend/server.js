@@ -10,7 +10,7 @@ const openai = new OpenAI({
 });
 
 const app = express();
-const PORT = 5500;
+const PORT = 5501;
 
 app.use(express.json());
 
@@ -64,21 +64,31 @@ const createAssistant = async (vectorStoreId) => {
   }
 };
 
-const initializeSystem = async () => {
+app.post("/api/initialize", async (req, res) => {
   try {
-    const files = [
-      "./files/EmporiaGuide.pdf",
-      "./files/EV-Charger-Technical-Specs_1.pdf",
-    ];
+    if (!vectorStoreId || !assistantId) {
+      const files = [
+        "./files/EmporiaGuide.pdf",
+        "./files/EV-Charger-Technical-Specs_1.pdf",
+      ];
 
-    const fileIds = await Promise.all(files.map(uploadFile));
-    vectorStoreId = await createVectorStore(fileIds);
-    assistantId = await createAssistant(vectorStoreId);
-    console.log("System initialized successfully!");
+      const fileIds = await Promise.all(files.map(uploadFile));
+      vectorStoreId = await createVectorStore(fileIds);
+      assistantId = await createAssistant(vectorStoreId);
+
+      console.log("System initialized successfully!");
+    }
+
+    res.json({
+      message: "System initialized successfully!",
+      vectorStoreId,
+      assistantId,
+    });
   } catch (error) {
     console.error("System initialization failed:", error.message);
+    res.status(500).json({ error: "System initialization failed." });
   }
-};
+});
 
 app.post("/api/toggle-fun-mode", (req, res) => {
   const { mode } = req.body;
@@ -97,7 +107,7 @@ app.post("/api/toggle-fun-mode", (req, res) => {
 });
 
 app.post("/api/ask", async (req, res) => {
-  const { question, funMode } = req.body; 
+  const { question, funMode } = req.body;
 
   if (!question)
     return res.status(400).json({ error: "Question is required." });
@@ -124,8 +134,6 @@ app.post("/api/ask", async (req, res) => {
     res.status(500).json({ error: "Failed to process the request." });
   }
 });
-
-initializeSystem();
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
