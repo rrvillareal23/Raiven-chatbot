@@ -18,32 +18,23 @@ let vectorStoreId = null;
 let assistantId = null;
 let funMode = true;
 
-// Retry function that waits for 10 seconds before retrying on error or no response
-const retryOperation = async (operation, retries = 10, delay = 10000) => {
-  let attempts = 0;
-  while (attempts < retries) {
+const retryOperation = async (operation, delay = 10000) => {
+  while (true) { 
     try {
       const result = await operation();
       if (result) {
-        return result; // Return the result if successful
+        return result; 
       } else {
         throw new Error("No response received");
       }
     } catch (error) {
-      attempts++;
-      console.error(`Attempt ${attempts} failed: ${error.message}`);
-      if (attempts < retries) {
-        console.log(`Retrying in ${delay / 1000} seconds...`);
-        await new Promise((resolve) => setTimeout(resolve, delay)); // Wait for 10 seconds
-      }
-      if (attempts >= retries) {
-        throw new Error(`Operation failed after ${retries} attempts`);
-      }
+      console.error(`Operation failed: ${error.message}`);
+      console.log(`Retrying in ${delay / 1000} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 };
 
-// Upload file with retry logic
 const uploadFile = async (filePath) => {
   return await retryOperation(async () => {
     const fileStream = fs.createReadStream(filePath);
@@ -56,7 +47,6 @@ const uploadFile = async (filePath) => {
   });
 };
 
-// Create vector store with retry logic
 const createVectorStore = async (fileIds) => {
   return await retryOperation(async () => {
     const vectorStore = await openai.beta.vectorStores.create({
@@ -67,7 +57,6 @@ const createVectorStore = async (fileIds) => {
   });
 };
 
-// Create assistant with retry logic
 const createAssistant = async (vectorStoreId) => {
   return await retryOperation(async () => {
     const assistant = await openai.beta.assistants.create({
@@ -83,7 +72,29 @@ const createAssistant = async (vectorStoreId) => {
   });
 };
 
-// Endpoint to initialize the system
+const initializeSystem = async () => {
+  const files = [
+    "./files/EmporiaGuide.pdf",
+    "./files/EV-Charger-Technical-Specs_1.pdf",
+  ];
+
+  const fileIds = await Promise.all(files.map(uploadFile));
+  vectorStoreId = await createVectorStore(fileIds);
+  assistantId = await createAssistant(vectorStoreId);
+
+  console.log("System initialized successfully!");
+};
+
+app.listen(PORT, async () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+  try {
+    await initializeSystem();
+    console.log("System initialized successfully!");
+  } catch (error) {
+    console.error("System initialization failed:", error.message);
+  }
+});
+
 app.post("/api/initialize", async (req, res) => {
   try {
     if (!vectorStoreId || !assistantId) {
@@ -110,7 +121,6 @@ app.post("/api/initialize", async (req, res) => {
   }
 });
 
-// Endpoint to toggle fun mode
 app.post("/api/toggle-fun-mode", (req, res) => {
   const { mode } = req.body;
   console.log("Toggle request received with mode:", mode);
@@ -127,7 +137,6 @@ app.post("/api/toggle-fun-mode", (req, res) => {
   res.json({ message: `Fun mode is now ${funMode ? "ON" : "OFF"}.` });
 });
 
-// Endpoint to ask a question
 app.post("/api/ask", async (req, res) => {
   const { question, funMode } = req.body;
 
@@ -155,9 +164,4 @@ app.post("/api/ask", async (req, res) => {
     console.error("Error querying assistant:", error.message);
     res.status(500).json({ error: "Failed to process the request." });
   }
-});
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
 });
