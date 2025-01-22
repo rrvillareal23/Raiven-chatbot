@@ -18,22 +18,25 @@ let vectorStoreId = null;
 let assistantId = null;
 let funMode = true;
 
-// Delay function to pause between retries
-const delay = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-
-// Retry mechanism
-const retryOperation = async (operation, retries = 3, delaySeconds = 10) => {
+// Retry function that waits for 10 seconds before retrying on error or no response
+const retryOperation = async (operation, retries = 3, delay = 10000) => {
   let attempts = 0;
   while (attempts < retries) {
     try {
-      return await operation();
+      const result = await operation();
+      if (result) {
+        return result; // Return the result if successful
+      } else {
+        throw new Error("No response received");
+      }
     } catch (error) {
       attempts++;
       console.error(`Attempt ${attempts} failed: ${error.message}`);
       if (attempts < retries) {
-        console.log(`Retrying in ${delaySeconds} seconds...`);
-        await delay(delaySeconds);
-      } else {
+        console.log(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, delay)); // Wait for 10 seconds
+      }
+      if (attempts >= retries) {
         throw new Error(`Operation failed after ${retries} attempts`);
       }
     }
