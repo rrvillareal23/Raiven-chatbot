@@ -19,7 +19,7 @@ let assistantId = null;
 let funMode = true;
 
 // Retry function that waits for 10 seconds before retrying on error or no response
-const retryOperation = async (operation, retries = 3, delay = 20000) => {
+const retryOperation = async (operation, retries = 10, delay = 10000) => {
   let attempts = 0;
   while (attempts < retries) {
     try {
