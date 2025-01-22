@@ -18,8 +18,31 @@ let vectorStoreId = null;
 let assistantId = null;
 let funMode = true;
 
+// Delay function to pause between retries
+const delay = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+// Retry mechanism
+const retryOperation = async (operation, retries = 3, delaySeconds = 5) => {
+  let attempts = 0;
+  while (attempts < retries) {
+    try {
+      return await operation();
+    } catch (error) {
+      attempts++;
+      console.error(`Attempt ${attempts} failed: ${error.message}`);
+      if (attempts < retries) {
+        console.log(`Retrying in ${delaySeconds} seconds...`);
+        await delay(delaySeconds);
+      } else {
+        throw new Error(`Operation failed after ${retries} attempts`);
+      }
+    }
+  }
+};
+
+// Upload file with retry logic
 const uploadFile = async (filePath) => {
-  try {
+  return await retryOperation(async () => {
     const fileStream = fs.createReadStream(filePath);
     const response = await openai.files.create({
       purpose: "assistants",
@@ -27,27 +50,23 @@ const uploadFile = async (filePath) => {
     });
     console.log(`Uploaded: ${filePath}, ID: ${response.id}`);
     return response.id;
-  } catch (error) {
-    console.error(`File upload error: ${filePath}`, error.message);
-    throw new Error("File upload failed");
-  }
+  });
 };
 
+// Create vector store with retry logic
 const createVectorStore = async (fileIds) => {
-  try {
+  return await retryOperation(async () => {
     const vectorStore = await openai.beta.vectorStores.create({
       file_ids: fileIds,
     });
     console.log(`Vector Store Created: ID - ${vectorStore.id}`);
     return vectorStore.id;
-  } catch (error) {
-    console.error("Error creating vector store:", error.message);
-    throw new Error("Vector store creation failed");
-  }
+  });
 };
 
+// Create assistant with retry logic
 const createAssistant = async (vectorStoreId) => {
-  try {
+  return await retryOperation(async () => {
     const assistant = await openai.beta.assistants.create({
       instructions:
         "You have access to two documents Emporia Guide EV Charger Technical Specifications. These documents contain all the information you need to answer user questions. Important: Do not guess or provide answers that aren't explicitly found in the documents.",
@@ -58,12 +77,10 @@ const createAssistant = async (vectorStoreId) => {
     });
     console.log(`Assistant Created: ID - ${assistant.id}`);
     return assistant.id;
-  } catch (error) {
-    console.error("Error creating assistant:", error.message);
-    throw new Error("Assistant creation failed");
-  }
+  });
 };
 
+// Endpoint to initialize the system
 app.post("/api/initialize", async (req, res) => {
   try {
     if (!vectorStoreId || !assistantId) {
@@ -90,6 +107,7 @@ app.post("/api/initialize", async (req, res) => {
   }
 });
 
+// Endpoint to toggle fun mode
 app.post("/api/toggle-fun-mode", (req, res) => {
   const { mode } = req.body;
   console.log("Toggle request received with mode:", mode);
@@ -106,6 +124,7 @@ app.post("/api/toggle-fun-mode", (req, res) => {
   res.json({ message: `Fun mode is now ${funMode ? "ON" : "OFF"}.` });
 });
 
+// Endpoint to ask a question
 app.post("/api/ask", async (req, res) => {
   const { question, funMode } = req.body;
 
@@ -135,6 +154,7 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
