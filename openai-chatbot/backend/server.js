@@ -22,7 +22,7 @@ let funMode = true;
 const delay = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 // Retry mechanism
-const retryOperation = async (operation, retries = 3, delaySeconds = 5) => {
+const retryOperation = async (operation, retries = 3, delaySeconds = 10) => {
   let attempts = 0;
   while (attempts < retries) {
     try {
