@@ -53,15 +53,6 @@ const initializeSystem = async () => {
   }
 };
 
-app.listen(PORT, async () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  try {
-    await initializeSystem();
-    console.log("System initialized successfully!");
-  } catch (error) {
-    console.error("System initialization failed:", error.message);
-  }
-});
 app.post("/api/ask", async (req, res) => {
   const { question, funMode } = req.body;
 
@@ -117,5 +108,15 @@ app.post("/api/ask", async (req, res) => {
   } catch (error) {
     console.error("Error querying assistant:", error.message);
     res.status(500).json({ error: "Failed to process the request." });
+  }
+});
+
+app.listen(PORT, async () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+  try {
+    await initializeSystem();
+    console.log("System initialized successfully!");
+  } catch (error) {
+    console.error("System initialization failed:", error.message);
   }
 });
