@@ -35,22 +35,6 @@ const initializeSystem = async () => {
       }
     }
   }
-
-  try {
-    const newAssistant = await openai.beta.assistants.create({
-      instructions:
-        "You have access to several documents. Answer questions based on these documents and do not guess.",
-      name: "File-Based Assistant",
-      tools: [{ type: "file_search" }],
-      tool_resources: { file_search: { vector_store_ids: [vectorStoreId] } },
-      model: "gpt-4o",
-    });
-    console.log(`Assistant Created: ID - ${newAssistant.id}`);
-    return newAssistant.id;
-  } catch (error) {
-    console.error("Error creating assistant:", error.message);
-    process.exit(1);
-  }
 };
 
 app.post("/api/ask", async (req, res) => {
