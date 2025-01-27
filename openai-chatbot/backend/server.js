@@ -3,33 +3,27 @@ import express from "express";
 import cors from "cors";
 import { OpenAI } from "openai";
 
-// Load environment variables
 dotenv.config();
 
-// Validate required environment variables
 const { OPENAI_API_KEY, VECTOR_STORE_ID, ASSISTANT_ID } = process.env;
 if (!OPENAI_API_KEY || !VECTOR_STORE_ID) {
   console.error("Missing required environment variables.");
   process.exit(1);
 }
 
-// Initialize OpenAI
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-// Constants
 const PORT = process.env.PORT || 5501;
 const DEFAULT_INSTRUCTIONS =
   "You have access to two documents. Answer questions based on these documents. Do not site sources, use markdown text, or guess.";
 const FUN_INSTRUCTIONS = `${DEFAULT_INSTRUCTIONS} Use friendly language and include a lot of emojis for engagement when answering questions. ⚡😊`;
 
-// App setup
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 let assistantId = ASSISTANT_ID;
 
-// Helper function to create or retrieve the assistant
 const initializeAssistant = async () => {
   if (assistantId) {
     try {
@@ -62,7 +56,6 @@ const initializeAssistant = async () => {
   }
 };
 
-// Route: Initialize assistant
 app.post("/api/initialize", async (req, res) => {
   try {
     const assistant = await initializeAssistant();
@@ -76,7 +69,6 @@ app.post("/api/initialize", async (req, res) => {
   }
 });
 
-// Route: Ask a question
 app.post("/api/ask", async (req, res) => {
   const { question, funMode = false } = req.body;
 
@@ -87,23 +79,19 @@ app.post("/api/ask", async (req, res) => {
   try {
     const instructions = funMode ? FUN_INSTRUCTIONS : DEFAULT_INSTRUCTIONS;
 
-    // Create thread
     const thread = await openai.beta.threads.create();
     console.log("Thread created with ID:", thread.id);
 
-    // Add user message
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
       content: question,
     });
 
-    // Run the assistant
     const run = await openai.beta.threads.runs.create(thread.id, {
       assistant_id: assistantId,
       instructions: instructions,
     });
 
-    // Poll for completion
     let response;
     const maxRetries = 10;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -117,7 +105,6 @@ app.post("/api/ask", async (req, res) => {
       throw new Error("Assistant run did not complete within the retry limit.");
     }
 
-    // Fetch assistant messages
     const messages = await openai.beta.threads.messages.list(thread.id);
     const assistantMessages = messages.data
       .filter((msg) => msg.role === "assistant")
@@ -131,7 +118,6 @@ app.post("/api/ask", async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(PORT, async () => {
   try {
     console.log(`Server is running on http://localhost:${PORT}`);
